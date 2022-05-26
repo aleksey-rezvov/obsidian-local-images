@@ -11,13 +11,20 @@ It will be better to do it type-correct.
 
 */
 export async function replaceAsync(str: any, regex: any, asyncFn: any) {
+  const remotes: string[] = [];
   const promises: Promise<any>[] = [];
   str.replace(regex, (match: string, ...args: any) => {
-    const promise = asyncFn(match, ...args);
-    promises.push(promise);
+    remotes.push(match);
+    promises.push(asyncFn(match, ...args));
   });
   const data = await Promise.all(promises);
-  return str.replace(regex, () => data.shift());
+  const remote2local = new Map();
+  remotes.map((remote, i) => {
+    remote2local.set(remote, data[i]);
+  });
+  return str.replace(regex, (match: string) => {
+    return remote2local.get(match);
+  });
 }
 
 export function isUrl(link: string) {
