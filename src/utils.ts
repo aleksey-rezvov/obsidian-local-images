@@ -11,20 +11,13 @@ It will be better to do it type-correct.
 
 */
 export async function replaceAsync(str: any, regex: any, asyncFn: any) {
-  const remotes: string[] = [];
   const promises: Promise<any>[] = [];
   str.replace(regex, (match: string, ...args: any) => {
-    remotes.push(match);
-    promises.push(asyncFn(match, ...args));
+    const promise = asyncFn(match, ...args);
+    promises.push(promise);
   });
   const data = await Promise.all(promises);
-  const remote2local = new Map();
-  remotes.map((remote, i) => {
-    remote2local.set(remote, data[i]);
-  });
-  return str.replace(regex, (match: string) => {
-    return remote2local.get(match);
-  });
+  return str.replace(regex, () => data.shift());
 }
 
 export function isUrl(link: string) {
@@ -73,4 +66,8 @@ export function pathJoin(dir: string, subpath: string): string {
   const result = path.join(dir, subpath);
   // it seems that obsidian do not understand paths with backslashes in Windows, so turn them into forward slashes
   return result.replace(/\\/g, "/");
+}
+
+export function genRandomStr(length: number): string {
+  return Array(length).fill(null).map(()=>"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".charAt(Math.random()*62)).join("");
 }

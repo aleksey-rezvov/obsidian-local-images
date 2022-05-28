@@ -1,6 +1,6 @@
 export const FILENAME_TEMPLATE = "media";
 
-export const MAX_FILENAME_INDEX = 1000;
+export const MAX_FILENAME_SUFFIX_LEN = 10;
 
 export const FILENAME_ATTEMPTS = 5;
 
