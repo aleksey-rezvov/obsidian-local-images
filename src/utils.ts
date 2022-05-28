@@ -67,3 +67,7 @@ export function pathJoin(dir: string, subpath: string): string {
   // it seems that obsidian do not understand paths with backslashes in Windows, so turn them into forward slashes
   return result.replace(/\\/g, "/");
 }
+
+export function genRandomStr(length: number): string {
+  return Array(length).fill(null).map(()=>"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".charAt(Math.random()*62)).join("");
+}
