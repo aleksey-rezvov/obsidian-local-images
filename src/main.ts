@@ -20,6 +20,13 @@ import {
 } from "./config";
 import { UniqueQueue } from "./uniqueQueue";
 
+// see https://discord.com/channels/686053708261228577/840286264964022302/880330073729826878
+declare module "obsidian" {
+  interface Vault {
+    getConfig(option: "attachmentFolderPath"): string;
+  }
+}
+
 export default class LocalImagesPlugin extends Plugin {
   settings: ISettings;
   modifiedQueue = new UniqueQueue<TFile>();
@@ -29,7 +36,16 @@ export default class LocalImagesPlugin extends Plugin {
     // const content = await this.app.vault.read(file);
     const content = await this.app.vault.cachedRead(file);
 
-    await this.ensureFolderExists(this.settings.mediaRootDirectory);
+    let mediaFolder = "";
+
+    // check mediaRootDirectory has value
+    if (!this.settings.mediaRootDirectory) {
+      mediaFolder = this.app.vault.getConfig("attachmentFolderPath");
+    } else {
+      mediaFolder = this.settings.mediaRootDirectory;
+    }
+
+    await this.ensureFolderExists(mediaFolder);
 
     const cleanedContent = this.settings.cleanContent
       ? cleanContent(content)
@@ -37,7 +53,7 @@ export default class LocalImagesPlugin extends Plugin {
     const fixedContent = await replaceAsync(
       cleanedContent,
       EXTERNAL_MEDIA_LINK_PATTERN,
-      imageTagProcessor(this.app, this.settings.mediaRootDirectory)
+      imageTagProcessor(this.app, mediaFolder)
     );
 
     if (content != fixedContent) {
@@ -330,7 +346,9 @@ class SettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Media folder")
-      .setDesc("Folder to keep all downloaded media files.")
+      .setDesc(
+        "Folder to keep all downloaded media files. Leave empty to use attachment folder of Obsidian"
+      )
       .addText((text) =>
         text
           .setValue(this.plugin.settings.mediaRootDirectory)

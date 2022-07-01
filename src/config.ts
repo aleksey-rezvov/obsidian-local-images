@@ -17,7 +17,8 @@ export const NOTICE_TIMEOUT = 10 * 1000;
 
 export const TIMEOUT_LIKE_INFINITY = 24 * 60 * 60 * 1000;
 
-export const FORBIDDEN_SYMBOLS_FILENAME_PATTERN = /\s+/g;
+export const FORBIDDEN_SYMBOLS_FILENAME_PATTERN =
+  /[\s\n\r\%\#=+$￥<>^`~\!|\\@,、｛｝！【】：；“”‘’《》，。？、]/g;
 export interface ISettings {
   realTimeUpdate: boolean;
   realTimeUpdateInterval: number;

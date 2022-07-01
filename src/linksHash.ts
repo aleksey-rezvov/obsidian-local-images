@@ -13,6 +13,9 @@ class LinkHashes {
     const fileHash = XXHash32.hash(0, data).toNumber();
     return this.linksInfo[link] == fileHash;
   }
+  getHash(link: string) {
+    return this.linksInfo[link];
+  }
 }
 
 export const linkHashes = new LinkHashes();
