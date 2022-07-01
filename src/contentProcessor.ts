@@ -31,8 +31,8 @@ export function imageTagProcessor(app: App, mediaDir: string) {
       let attempt = 0;
       while (attempt < FILENAME_ATTEMPTS) {
         try {
-          const { fileName, needWrite } = await chooseFileName(
-            app.vault.adapter,
+          const { fileName, imgName, needWrite } = await chooseFileName(
+            app,
             mediaDir,
             anchor,
             link,
@@ -44,7 +44,7 @@ export function imageTagProcessor(app: App, mediaDir: string) {
           }
 
           if (fileName) {
-            return `![${anchor}](${fileName})`;
+            return `![${anchor}](${imgName})`;
           } else {
             return match;
           }
@@ -67,15 +67,16 @@ export function imageTagProcessor(app: App, mediaDir: string) {
 }
 
 async function chooseFileName(
-  adapter: DataAdapter,
+  app: App,
   dir: string,
   baseName: string,
   link: string,
   contentData: ArrayBuffer
-): Promise<{ fileName: string; needWrite: boolean }> {
+): Promise<{ fileName: string; imgName: string; needWrite: boolean }> {
+  const adapter = app.vault.adapter;
   const fileExt = await fileExtByContent(contentData);
   if (!fileExt) {
-    return { fileName: "", needWrite: false };
+    return { fileName: "", imgName: "", needWrite: false };
   }
   // if there is no anchor try get file name from url
   if (!baseName) {
@@ -93,19 +94,30 @@ async function chooseFileName(
     baseName = baseName.slice(0, -1 * (fileExt.length + 1));
   }
 
+  let activeFileName = app.workspace.getActiveFile().name;
+  // truncate  name to avoid long file names
+  if (activeFileName.length > 64) {
+    activeFileName = activeFileName.slice(0, 64);
+  }
+
+  linkHashes.ensureHashGenerated(link, contentData);
+
+  baseName = activeFileName + "_" + linkHashes.getHash(link) + "_" + baseName;
+
   baseName = cleanFileName(baseName);
 
   let fileName = "";
   let needWrite = true;
+  let imgName = "";
   let index = 0;
   while (!fileName && index < MAX_FILENAME_INDEX) {
-    const suggestedName = index
-      ? pathJoin(dir, `${baseName}-${index}.${fileExt}`)
-      : pathJoin(dir, `${baseName}.${fileExt}`);
+    imgName = index
+      ? `${baseName}-${index}.${fileExt}`
+      : `${baseName}.${fileExt}`;
+
+    const suggestedName = pathJoin(dir, imgName);
 
     if (await adapter.exists(suggestedName, false)) {
-      linkHashes.ensureHashGenerated(link, contentData);
-
       const fileData = await adapter.readBinary(suggestedName);
 
       if (linkHashes.isSame(link, fileData)) {
@@ -122,7 +134,5 @@ async function chooseFileName(
     throw new Error("Failed to generate file name for media file.");
   }
 
-  linkHashes.ensureHashGenerated(link, contentData);
-
-  return { fileName, needWrite };
+  return { fileName, imgName, needWrite };
 }
