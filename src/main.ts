@@ -27,9 +27,17 @@ export default class LocalImagesPlugin extends Plugin {
 
   private async proccessPage(file: TFile, silent = false) {
     // const content = await this.app.vault.read(file);
+    let mediaRootDirectory = this.settings.mediaRootDirectory
+    
+    // support ${fileBaseName} value
+    mediaRootDirectory = mediaRootDirectory.replace("\${fileBaseName}",file.basename)
+    
+    if(this.settings.mediaRootDirectoryBaseOnFile){
+      mediaRootDirectory = file.parent.path + "/" + mediaRootDirectory.replace(/^(\/|\.\/)/,"")
+    }
     const content = await this.app.vault.cachedRead(file);
 
-    await this.ensureFolderExists(this.settings.mediaRootDirectory);
+    await this.ensureFolderExists(mediaRootDirectory);
 
     const cleanedContent = this.settings.cleanContent
       ? cleanContent(content)
@@ -37,7 +45,7 @@ export default class LocalImagesPlugin extends Plugin {
     const fixedContent = await replaceAsync(
       cleanedContent,
       EXTERNAL_MEDIA_LINK_PATTERN,
-      imageTagProcessor(this.app, this.settings.mediaRootDirectory)
+      imageTagProcessor(this.app, mediaRootDirectory)
     );
 
     if (content != fixedContent) {
@@ -326,6 +334,19 @@ class SettingTab extends PluginSettingTab {
           this.plugin.settings.include = value;
           await this.plugin.saveSettings();
         })
+      );
+
+
+    new Setting(containerEl)
+      .setName("Path is based on the MD file")
+      .setDesc("The path where the media files are saved starts from the MD file directory location!")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.mediaRootDirectoryBaseOnFile)
+          .onChange(async (value) => {
+            this.plugin.settings.mediaRootDirectoryBaseOnFile = value;
+            await this.plugin.saveSettings();
+          })
       );
 
     new Setting(containerEl)
