@@ -1,3 +1,5 @@
+**2022-12-01. The developer of this plugin has been hugely influenced by the terrible events of 2022 and is asking for help. Can someone take a role of analyst, project manager and//or software tester, so a volunteer team could be established to support this and/or another plugins for Obsidian? [Read more details here](https://github.com/aleksey-rezvov/obsidian-local-images/issues/46)!**
+
 # Obsidian Local Images
 
 **This plugin is still young, backups are a good idea.**
